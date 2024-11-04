@@ -1,0 +1,58 @@
+<data>
+	<entries>
+		<entry name="treatment_dosage" dtype="Float" attribute="Variable"> 0.9 </entry>
+		<entry name="bolus_fraction" dtype="Float" attribute="Variable"> 0.0 </entry>
+		<entry name="bolus_time" dtype="Float" attribute="Variable"> 0.0 </entry>
+		<entry name="delay_time" dtype="Float" attribute="Variable"> 0.0 </entry>
+		<entry name="infusion_time" dtype="Float" attribute="Variable"> 3600 </entry>
+		<entry name="plasma_volume" dtype="Float" attribute="Variable"> 3.9 </entry>
+		<entry name="patient_mass" dtype="Float" attribute="Variable"> 80 </entry>
+		<entry name="init_fibrin_density" dtype="Float" attribute="Initial Condition"> 3e-3 </entry>
+		<entry name="init_tPA_conc" dtype="Float" attribute="Initial Condition"> 0.07e-3 </entry>
+		<entry name="init_Plasminogen_conc" dtype="Float" attribute="Initial Condition"> 2.2 </entry>
+		<entry name="init_Plasmin_conc" dtype="Float" attribute="Initial Condition"> 0 </entry>
+		<entry name="init_Fibrinogen_conc" dtype="Float" attribute="Initial Condition"> 8 </entry>
+		<entry name="init_Antiplasmin_conc" dtype="Float" attribute="Initial Condition"> 1 </entry>
+		<entry name="init_tPA_bindSites" dtype="Float" attribute="Initial Condition"> 0 </entry>
+		<entry name="init_Plasminogen_bindSites" dtype="Float" attribute="Initial Condition"> 0 </entry>
+		<entry name="init_Plasmin_bindSites" dtype="Float" attribute="Initial Condition"> 0 </entry>
+		<entry name="init_Plasmin_bindConc" dtype="Float" attribute="Initial Condition"> 0 </entry>
+		<entry name="k_2_free_phase_Plasminogen" dtype="Float" attribute="Fixed"> 0.3 </entry>
+		<entry name="K_M_free_phase_Plasminogen" dtype="Float" attribute="Fixed"> 28 </entry>
+		<entry name="k_Antiplasmin_inhibition" dtype="Float" attribute="Fixed"> 10 </entry>
+		<entry name="k_Fibrinogen_degredation" dtype="Float" attribute="Fixed"> 6 </entry>
+		<entry name="Mol_wt_tPA" dtype="Float" attribute="Fixed"> 59.04 </entry>
+		<entry name="half_life_Antiplasmin" dtype="Float" attribute="Fixed"> 228096 </entry>
+		<entry name="half_life_Fibrinogen" dtype="Float" attribute="Fixed"> 357696 </entry>
+		<entry name="half_life_Plasminogen" dtype="Float" attribute="Fixed"> 190080 </entry>
+		<entry name="half_life_Plasmin" dtype="Float" attribute="Fixed"> 0.1 </entry>
+		<entry name="half_life_tPA" dtype="Float" attribute="Fixed"> 240 </entry>
+		<entry name="k_2_bound_Plasminogen" dtype="Float" attribute="Fixed"> 0.3 </entry>
+		<entry name="k_fibrin_degredation" dtype="Float" attribute="Fixed"> 2.178 </entry>
+		<entry name="K_M_bound_Plasminogen" dtype="Float" attribute="Fixed"> 0.16 </entry>
+		<entry name="gamma_solubilisation" dtype="Float" attribute="Fixed"> 0.1 </entry>
+		<entry name="k_adsorption_Plasminogen" dtype="Float" attribute="Fixed"> 0.1 </entry>
+		<entry name="k_adsorption_Plasmin" dtype="Float" attribute="Fixed"> 0.1 </entry>
+		<entry name="k_adsorption_tPA" dtype="Float" attribute="Fixed"> 0.01 </entry>
+		<entry name="k_desorption_Plasminogen" dtype="Float" attribute="Fixed"> 3.8 </entry>
+		<entry name="k_desorption_Plasmin" dtype="Float" attribute="Fixed"> 0.05 </entry>
+		<entry name="k_desorption_tPA" dtype="Float" attribute="Fixed"> 0.0058 </entry>
+		<entry name="D_dispersion_tPA" dtype="Float" attribute="Fixed"> 50 </entry>
+		<entry name="D_dispersion_Plasminogen" dtype="Float" attribute="Fixed"> 50 </entry>
+		<entry name="D_dispersion_Plasmin" dtype="Float" attribute="Fixed"> 50 </entry>
+
+		<entry name="Molecular_weight_tPA" dtype="Float" attribute="Fixed"> 166 </entry>
+		<entry name="Blood_density" dtype="Float" attribute="Fixed"> 1.06e-3 </entry>
+		<entry name="Blood_viscosity" dtype="Float" attribute="Fixed"> 4.3e-3 </entry>
+		<entry name="Initial_thrombus_porosity" dtype="Float" attribute="Fixed"> 0.80 </entry>
+		<entry name="Particle_characteristic_length" dtype="Float" attribute="Fixed"> 3e-3 </entry>
+		<entry name="Diffusivity_inside_thrombus" dtype="Float" attribute="Fixed"> 0.1 </entry>
+		<entry name="Diffusivity_outside_thrombus" dtype="Float" attribute="Fixed"> 1.0 </entry>
+		<entry name="Total_max_inlet_flowrate" dtype="Float" attribute="Fixed"> 650.0e3</entry>
+		<entry name="Total_max_BA_flowrate" dtype="Float" attribute="Fixed"> 140.16e3</entry>
+		<entry name="Total_max_LICA_flowrate" dtype="Float" attribute="Fixed"> 230.57e3</entry>
+		<entry name="Total_max_RICA_flowrate" dtype="Float" attribute="Fixed"> 277.95e3</entry>
+		
+
+	</entries>
+</data>
