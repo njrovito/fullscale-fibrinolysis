@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import fibrinolysis_reactionLib as fibrxn # library file with systems of equations
-import fibrinolysis_initializationLib as fibinit # library file with initialization values
+import tools.fibrinolysis_reactionLib as fibrxn # library file with systems of equations
+import tools.fibrinolysis_initializationLib as fibinit # library file with initialization values
 # import vtkFiberVisualize.py as fibvis # library file with fiber-oriented vtk visulaization library
 
 '''
