@@ -47,34 +47,34 @@ from tools.fibrinolysis_cfd_tools import get_inlet_velocities
 from tools.fibrinolysis_cfd_tools import get_normal_vector
 from tools.fibrinolysis_cfd_tools import get_tpa_flux
 
-class MyNonLinearSolver(fe.NewtonSolver):
-	def __init__(self, comm, problem, la_solver, **kwargs):
-		self.problem = problem
-		self.solver_type = kwargs.pop('solver_type', 'gmres')
-		self.pc_type     = kwargs.pop('pc_type'    , 'hypre')
-		self.rel_tol     = kwargs.pop('relative_tolerance', 1e-8)
-		self.abs_tol     = kwargs.pop('absolute_tolerance', 1e-10)
-		self.max_iter    = kwargs.pop('maximum_iterations', 1000)
-		fe.NewtonSolver.__init__(self, comm,
-		fe.PETScKrylovSolver(), fe.PETScFactory.instance())
+# class MyNonLinearSolver(fe.NewtonSolver):
+# 	def __init__(self, comm, problem, la_solver, **kwargs):
+# 		self.problem = problem
+# 		self.solver_type = kwargs.pop('solver_type', 'gmres')
+# 		self.pc_type     = kwargs.pop('pc_type'    , 'hypre')
+# 		self.rel_tol     = kwargs.pop('relative_tolerance', 1e-8)
+# 		self.abs_tol     = kwargs.pop('absolute_tolerance', 1e-10)
+# 		self.max_iter    = kwargs.pop('maximum_iterations', 1000)
+# 		fe.NewtonSolver.__init__(self, comm,
+# 		fe.PETScKrylovSolver(), fe.PETScFactory.instance())
 
-	def solver_setup(self, A, P, problem, iteration):
-		self.linear_solver().set_operator(A)
-		fe.PETScOptions.set("ksp_type", self.solver_type)
-		fe.PETScOptions.set("ksp_monitor")
-		fe.PETScOptions.set("pc_type", self.pc_type)
-		self.linear_solver().parameters["relative_tolerance"] = self.rel_tol
-		self.linear_solver().parameters["absolute_tolerance"] = self.abs_tol
-		self.linear_solver().parameters["maximum_iterations"] = self.max_iter
-		self.linear_solver().set_from_options()
+# 	def solver_setup(self, A, P, problem, iteration):
+# 		self.linear_solver().set_operator(A)
+# 		fe.PETScOptions.set("ksp_type", self.solver_type)
+# 		fe.PETScOptions.set("ksp_monitor")
+# 		fe.PETScOptions.set("pc_type", self.pc_type)
+# 		self.linear_solver().parameters["relative_tolerance"] = self.rel_tol
+# 		self.linear_solver().parameters["absolute_tolerance"] = self.abs_tol
+# 		self.linear_solver().parameters["maximum_iterations"] = self.max_iter
+# 		self.linear_solver().set_from_options()
 
-	def solve(self):
-		sol_vector = self.problem.physics.solution
-		super().solve(self.problem, sol_vector.vector())
+# 	def solve(self):
+# 		sol_vector = self.problem.physics.solution
+# 		super().solve(self.problem, sol_vector.vector())
 
-class MyPhysicsSolver(PhysicsSolver):
-	def set_problem_solver(self):
-		self.problem_solver = MyNonLinearSolver(self.physics.mesh.comm, self.problem, self.la_solver)
+# class MyPhysicsSolver(PhysicsSolver):
+# 	def set_problem_solver(self):
+# 		self.problem_solver = MyNonLinearSolver(self.physics.mesh.comm, self.problem, self.la_solver)
 
 def build_nse_block_solver(nse):
 	'''
@@ -112,10 +112,68 @@ def build_nse_block_solver(nse):
 	solver = BlockNonLinearSolver(tree, nse.mesh.comm, problem, fe.PETScKrylovSolver())
 	return solver
 
+def build_nested_block_solver(physics, ):
+	'''
+	Block krylov solver for handing all physics:
+
+	nested block solve for tags: {u, p}, {C_tpa, C_plg, C_pls, C_fbg, C_apl}
+	(u, p, C_tpa, C_plg, C_pls, C_fbg, C_apl)
+
+	TBD:
+	
+	What are the composite_type, schur_fact_type, and schur_pre_type??
+	'''
+
+
+	split_0 = {
+				'fields': (('u', 'p', 'C_tpa', 'C_plg', 'C_pls', 'C_fbg'), 'C_apl'),
+				'composite_type': 'schur',
+				'schur_fact_type': 'full',
+				'schur_pre_type': 'a11'
+	}
+	split_1 = {
+				'fields': (('u', 'p', 'C_tpa', 'C_plg', 'C_pls'), 'C_fbg'),
+				'composite_type': 'schur',
+				'schur_fact_type': 'full',
+				'schur_pre_type': 'a11'
+	}
+	split_2 = {
+				'fields': (('u', 'p', 'C_tpa', 'C_plg'), 'C_pls'),
+				'composite_type': 'schur',
+				'schur_fact_type': 'full',
+				'schur_pre_type': 'a11'
+	}
+	split_3 = {
+				'fields': (('u', 'p', 'C_tpa'), 'C_plg'),
+				'composite_type': 'schur',
+				'schur_fact_type': 'full',
+				'schur_pre_type': 'a11'
+	}
+	split_4 = {
+				'fields': (('u', 'p'), 'C_tpa'),
+				'composite_type': 'schur',
+				'schur_fact_type': 'full',
+				'schur_pre_type': 'a11'
+	}
+	split_5 = {
+				'fields': ('u', 'p'),
+				'composite_type': 'schur',
+				'schur_fact_type': 'full',
+				'schur_pre_type': 'a11'
+	}
+
+	splits = [split_0, split_1, split_2, split_3, split_4, split_5]
+	tree = FieldSplitTree(physics, splits)
+	problem = NonLinearProblem(physics)
+	solver = BlockNonLinearSolver(tree, physics.mesh.comm, problem, fe.PETScKrylovSolver())
+	return solver
+
+
+
 def main(path_to_vessels, path_to_thrombus, path_to_fibrin_constants='fibrinolysis_inputs.xml'):
 	output_dir = 'output-409-m'
 	output_type = 'h5'
-	debug_outputs = False
+
 	fsu = FibrinolysisSetup(path_fibrin_constants)
 	CONSTANTS = fsu.constants
 	theta = 0.5
@@ -127,7 +185,7 @@ def main(path_to_vessels, path_to_thrombus, path_to_fibrin_constants='fibrinolys
 	rxn_time = 0
 	
 	# Constant quantities
-	dt = 0.002 # 002  # s
+	dt = 0.002 # s
 	end_time = 1.0  # s
 	output_period = 20
 	zero_vector = fe.Constant((0.0, 0.0, 0.0))
@@ -145,38 +203,26 @@ def main(path_to_vessels, path_to_thrombus, path_to_fibrin_constants='fibrinolys
 	id_RACA = 10
 	id_BA = 11
 
-	inout_boundary_list = [
-					
-					]
 	outlet_boundary_list = [id_LMCA, id_RPCA, id_RMCA, id_LPCA, id_LACA, id_RACA]
+	inout_boundary_list = outlet_boundary_list + [id_LICA, id_RICA, id_BA]
 
-	# initialize fibrin concentrations
 	n_tot_init = fsu.n_tot_init	
-
-	n_0 = np.array([n_tot_init, CONSTANTS['init_tPA_bindSites'], CONSTANTS['init_Plasminogen_bindSites'],
-					CONSTANTS['init_Plasmin_bindSites'], CONSTANTS['init_Plasmin_bindConc']]).T
-	# endregion
-
-	# --------------------------------- #
-	# region: Read mesh(es)
-	# --------------------------------- #
-	mesh_file = path_to_vessels
-	mesh = Mesh(mesh_file=mesh_file)
+	n_0 = np.array([n_tot_init, CONSTANTS['init_tPA_bindSites'], CONSTANTS['init_Plasminogen_bindSites'], CONSTANTS['init_Plasmin_bindSites'], CONSTANTS['init_Plasmin_bindConc']]).T
 	
+	mesh = Mesh(mesh_file=path_to_vessels)
 	thrombus_file = path_to_thrombus
 	thrombus_mesh = Mesh(mesh_file=thrombus_file, comm=fe.MPI.comm_self) 
 
 	rank = mesh.comm.rank
 	size = mesh.comm.size
-	if debug_outputs: print(size, rank)
-	
+
 	def inside_thrombus(x):
 		return thrombus_mesh.mesh.bounding_box_tree().compute_first_entity_collision(fe.Point(x)) \
 			< thrombus_mesh.mesh.num_cells()
-
+	
 	V = fe.FunctionSpace(mesh.mesh, 'CG', 1)  # for creating all custome mesh functions
 
-	# define a vector that sets cells in/out of the domain to 1 and interior/wall cells to 0
+	# define a vector that sets cells in/out of the domain to 1 and interior/wall cells to 0	
 	cell_type = fe.Function(V)
 	cell_type.vector()[:] = 0
 	for bnd in inout_boundary_list:
@@ -237,27 +283,25 @@ def main(path_to_vessels, path_to_thrombus, path_to_fibrin_constants='fibrinolys
 	apl_adr = set_apl_transport(mesh, dt, theta, u0, un, D)
 	
 	# Define coupled NSE-ADR problem
-	coupled_adr = TransientMultiPhysicsProblem(tpa_adr, plg_adr, pls_adr, fbg_adr, apl_adr)
-	coupled_adr.set_element()
-	coupled_adr.build_function_space()
+	coupled_transport = TransientMultiPhysicsProblem(nse, tpa_adr, plg_adr, pls_adr, fbg_adr, apl_adr)
+	coupled_transport.set_element()
+	coupled_transport.build_function_space()
 
 	# Set solutions functions
-	tpa = coupled_adr.solution_function('C_tpa')
-	plg = coupled_adr.solution_function('C_plg')
-	pls = coupled_adr.solution_function('C_pls')
-	fbg = coupled_adr.solution_function('C_fbg')
-	apl = coupled_adr.solution_function('C_apl')
+	u = coupled_transport.solution_function('u')
+	p = coupled_transport.solution_function('p')
+	tpa = coupled_transport.solution_function('C_tpa')
+	plg = coupled_transport.solution_function('C_plg')
+	pls = coupled_transport.solution_function('C_pls')
+	fbg = coupled_transport.solution_function('C_fbg')
+	apl = coupled_transport.solution_function('C_apl')
 
-	# --------------------------------- #
-	# region: Set weak form
-	# --------------------------------- #
+	nse_options = {'stab':True}
 	stp_options = {'stab':True}
-	coupled_adr.set_weak_form(stp_options,stp_options,stp_options,stp_options,stp_options)
-	coupled_adr.set_writer(output_dir, output_type)
 
-	# endregion
+	coupled_transport.set_weak_form(nse_options, stp_options,stp_options,stp_options,stp_options,stp_options)
+	coupled_transport.set_writer(output_dir, output_type)
 
-	# region: create bind site mesh functions (n)
 	n_tot = fe.Function(V)
 	n_tpa = fe.Function(V)
 	n_plg = fe.Function(V)
@@ -293,8 +337,8 @@ def main(path_to_vessels, path_to_thrombus, path_to_fibrin_constants='fibrinolys
 	flux_BA_tpa = fe.Expression(('q * nx', 'q * ny', 'q * nz'), degree=1, q=q_BA_tpa, nx=-BA_normal[0], ny=-BA_normal[1], nz=-BA_normal[2])
 	flux_LICA_tpa = fe.Expression(('q * nx', 'q * ny', 'q * nz'), degree=1, q=q_LICA_tpa, nx=-LICA_normal[0], ny=-LICA_normal[1], nz=-LICA_normal[2])
 	flux_RICA_tpa = fe.Expression(('q * nx', 'q * ny', 'q * nz'), degree=1, q=q_RICA_tpa, nx=-RICA_normal[0], ny=-RICA_normal[1], nz=-RICA_normal[2])
-	C_tpa_0 = coupled_adr.sub_physics[0].previous_solution
-	C_tpa_n = coupled_adr.sub_physics[0].solution
+	C_tpa_0 = coupled_transport.sub_physics[0].previous_solution
+	C_tpa_n = coupled_transport.sub_physics[0].solution
 
 	u_bcs = {
 			id_BA  : {'type': 'dirichlet', 'value': inlet_BA_u},
@@ -342,22 +386,20 @@ def main(path_to_vessels, path_to_thrombus, path_to_fibrin_constants='fibrinolys
 			id_RICA : {'type': 'dirichlet', 'value': fe.Constant(fsu.apl_blood_concentration_init)}
 			}
 
-	nse_bc_dict = {
-				'u': u_bcs,
-				'p': p_bcs,
-				}
-	nse.set_bcs(nse_bc_dict)
-	stp_bc_dict = {
-				'C_tpa': tpa_bcs,
-				'C_plg': plg_bcs,
-				'C_pls': pls_bcs,
-				'C_fbg': fbg_bcs,
-				'C_apl': apl_bcs
-				}
-	coupled_adr.set_bcs(stp_bc_dict)
+	bc_dict = {
+			'u': u_bcs,
+			'p': p_bcs,
+			'C_tpa': tpa_bcs,
+			'C_plg': plg_bcs,
+			'C_pls': pls_bcs,
+			'C_fbg': fbg_bcs,
+			'C_apl': apl_bcs
+		}
+
+	coupled_transport.set_bcs(bc_dict)
 	
 	stp_la_solver = fe.PETScKrylovSolver()
-	stp_solver = PhysicsSolver(coupled_adr, stp_la_solver)
+	stp_solver = PhysicsSolver(coupled_transport, stp_la_solver)
 	nse_solver = build_nse_block_solver(nse)
 	# endregion
 
@@ -386,7 +428,7 @@ def main(path_to_vessels, path_to_thrombus, path_to_fibrin_constants='fibrinolys
 		# fbg_adr.set_advection_velocity(u0, un)
 		# apl_adr.set_advection_velocity(u0, un)
 		# stp_solver.solve()
-		# coupled_adr.update_previous_solution()
+		# coupled_transport.update_previous_solution()
 
 		# stp_stop = time.time()
 		# stp_time += (stp_stop - stp_start)
@@ -396,7 +438,7 @@ def main(path_to_vessels, path_to_thrombus, path_to_fibrin_constants='fibrinolys
 		# # region: Solve reaction substep
 		# # --------------------------------- #
 		# rxn_start = time.time()
-		# c_tpa, c_plg, c_pls, c_fbg, c_apl = coupled_adr.solution_function().split(deepcopy=True)
+		# c_tpa, c_plg, c_pls, c_fbg, c_apl = coupled_transport.solution_function().split(deepcopy=True)
 
 		# # region: Get current solution vectors
 		# tpa_array = c_tpa.vector().get_local()
@@ -483,7 +525,7 @@ def main(path_to_vessels, path_to_thrombus, path_to_fibrin_constants='fibrinolys
 		# 		if rank == 0: print('output phi.h5')
 
 			# nse.write(time_stamp=t)
-			# coupled_adr.write(time_stamp=t)
+			# coupled_transport.write(time_stamp=t)
 
 		if rank == 0:  # Print current time step solved 
 			print('-'*50)
