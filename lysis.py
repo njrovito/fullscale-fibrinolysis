@@ -631,24 +631,9 @@ def main(path_to_vessels='vessels.h5', path_to_thrombus='thrombus.h5', path_to_f
 	# endregion
 	# endregion (coupled physics)
 
-	# --------------------------------- #
-	# region: Set linear algebra solvers
-	# --------------------------------- #
-	# class MyNonLinearSolver(fe.NewtonSolver):
-	# def __init__(self, comm, problem, la_solver, **kwargs):
-	# 	self.problem = problem
-	# 	self.solver_type = kwargs.pop('solver_type', 'gmres')
-	# 	self.pc_type     = kwargs.pop('pc_type'    , 'hypre')
-	# 	self.rel_tol     = kwargs.pop('relative_tolerance', 1e-8)
-	# 	self.abs_tol     = kwargs.pop('absolute_tolerance', 1e-10)
-	# 	self.max_iter    = kwargs.pop('maximum_iterations', 1000)
-	# 	fe.NewtonSolver.__init__(self, comm,
-	# 	fe.PETScKrylovSolver(), fe.PETScFactory.instance())
-	# stp_problem = NonLinearProblem(coupled_adr)
-	# stp_solver = MyNonLinearSolver(coupled_adr.mesh.comm, stp_problem, fe.PETScKrylovSolver(), pc_type = 'hypre', maximum_iterations = 1000 )
 	stp_la_solver = fe.PETScKrylovSolver()
 	stp_solver = PhysicsSolver(coupled_adr, stp_la_solver)
-	nse_solver = build_nse_block_solver(nse)
+	nse_solver = MyNonLinearSolver(nse)
 	# endregion
 
 	while t < end_time:
